@@ -31,6 +31,24 @@ CCNodeTransform(CCNode *node, GLKMatrix4 parentTransform)
 	return CCNodeTransform(self, *parentTransform);
 }
 
+static inline void
+CCNodeDrawOrRender(CCNode *self, CCRenderer *renderer, GLKMatrix4 *transform)
+{
+	// TODO cache this.
+	SEL selector = @selector(render:transform:);
+	if([self respondsToSelector:selector]){
+		// Save a copy of the matrix.
+		GLKMatrix4 t = *transform;
+		
+		// Enqueue a call to the render method.
+		[renderer enqueueBlock:^{
+			[self render:renderer transform:&t];
+		} globalSortOrder:0 debugLabel:@"[CCNode render:transform:]" threadSafe:NO];
+	} else {
+		[self draw:renderer transform:transform];
+	}
+}
+
 -(void) visit:(CCRenderer *)renderer parentTransform:(const GLKMatrix4 *)parentTransform
 {
 	// quick return if not visible. children won't be drawn.
@@ -43,14 +61,14 @@ CCNodeTransform(CCNode *node, GLKMatrix4 parentTransform)
 	
 	for(CCNode *child in _children){
 		if(!drawn && child.zOrder >= 0){
-			[self draw:renderer transform:&transform];
+			CCNodeDrawOrRender(self, renderer, &transform);
 			drawn = YES;
 		}
 		
 		[child visit:renderer parentTransform:&transform];
 	}
 	
-	if(!drawn) [self draw:renderer transform:&transform];
+	if(!drawn) CCNodeDrawOrRender(self, renderer, &transform);
 
 	// reset for next frame
 	_orderOfArrival = 0;

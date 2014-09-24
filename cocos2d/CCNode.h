@@ -43,6 +43,19 @@
 @class CCBAnimationManager;
 @class CCAnimationManager;
 
+
+/**
+	The CCNodeRender protocol provides an easier path to port older custom rendering code from Cocos2D 3.0 and earlier to the new renderer introduced in 3.1.
+	If you implement the optional render method, it will be automatically scheduled by the renderer and you can call GL code from inside it directly.
+*/
+@protocol CCNodeRender
+
+@optional
+-(void)render:(CCRenderer *)renderer transform:(const GLKMatrix4 *)transform;
+
+@end
+
+
 /** CCNode is the base class for all objects displayed by Cocos2d. The nodes are hierachically organized in a tree, normally with a CCScene as its root node. Example of CCNode:s are CCSprite, CCScene and CCButton. The CCNode handles transformations, can have a content size and provides a coordinate system to its children. Any CCNode or subclass can handle user interaction, such as touches and mouse events, see the CCResponder for more information on this.
  
  ### Coordinate System and Positioning
@@ -70,7 +83,7 @@
 A common user pattern in building a Cocos2d game is to subclass CCNode, add it to a CCScene and override the methods for handling user input.
  */
 
-@interface CCNode : CCResponder < CCSchedulerTarget > {
+@interface CCNode : CCResponder < CCSchedulerTarget, CCNodeRender > {
     
 	// Rotation angle.
 	float _rotationalSkewX, _rotationalSkewY;
@@ -725,4 +738,3 @@ A common user pattern in building a Cocos2d game is to subclass CCNode, add it t
 -(void) visit:(CCRenderer *)renderer parentTransform:(const GLKMatrix4 *)parentTransform;
 
 @end
-
